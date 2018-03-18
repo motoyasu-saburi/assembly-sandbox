@@ -28,6 +28,8 @@
 
 ; プログラム本体
 
+; http://oswiki.osask.jp/?%28AT%29BIOS
+
 entry:
 	MOV	AX,0		; レジスタ初期化
 	MOV	SS,AX
@@ -56,39 +58,40 @@ entry:
 key:
 	MOV AH,0x00
 	INT	0x16		; ビデオBIOS呼び出し
-	JMP pixel
+
+	CMP AH,0x4d
+ 	JE right
+ 	CMP AH,0x4b
+ 	JE left
+ 	CMP AH,0x48
+ 	JE up
+ 	CMP AH,0x50
+ 	JE down
+
+right:
+ADD CX,1;
+JMP pixel
+
+up:
+SUB DX,1;
+JMP pixel
+
+left:
+SUB CX,1;
+JMP pixel
+
+down:
+ADD DX,1;
+JMP pixel
 
 ; pixel書き込み
 pixel:
 	MOV AH,0x0c;
 	MOV AL,0x15;
-	ADD CX,1;
-	ADD DX,1;
 	INT	0x10		; ビデオBIOS呼び出し
 	JE SHORT key ; 終了した場合のjump
 	;こっちは、いわゆる else
 	JMP key ; ループで元に戻す
-
-;	  MOV AX,0x1010 ; パレット指定し始め
-;		MOV BX,0x0000 ; 背景
-;		MOV DH,0x3f ; R
-;		MOV CH,0x00 ; G
-;		MOV CL,0    ; B
-;		INT	0x10		; ビデオBIOS呼び出し
-
-;	MOV	SI,msg
-; putloop:
-; 	MOV	AL,[SI]
-; 	ADD	SI,1		; SIに1を足す
-; 	CMP	AL,0
-; 	JE SHORT	fin
-; 	MOV	AH,0x0e		; 一文字表示ファンクション
-; 	MOV	BX,15		; カラーコード
-; 	INT	0x10		; ビデオBIOS呼び出し
-; 	JMP	putloop
-; fin:
-	; HLT			; 何かあるまでCPUを停止させる
-	; JMP SHORT	fin	; 無限ループ
 
 msg:
 	DB	0x0a, 0x0a	; 改行を2つ

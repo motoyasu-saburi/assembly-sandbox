@@ -30,76 +30,94 @@
     28                                  
     29                                  ; プログラム本体
     30                                  
-    31                                  entry:
-    32 00000050 B80000                  	MOV	AX,0		; レジスタ初期化
-    33 00000053 8ED0                    	MOV	SS,AX
-    34 00000055 BC007C                  	MOV	SP,0x7c00
-    35 00000058 8ED8                    	MOV	DS,AX
-    36 0000005A 8EC0                    	MOV	ES,AX
-    37                                  
-    38                                  ; カラーモード VGAグラフィックス
-    39 0000005C B400                    	MOV AH,0x00
-    40 0000005E B012                    	MOV AL,0x12
-    41 00000060 CD10                    	INT	0x10		; ビデオBIOS呼び出し
-    42                                  
-    43                                  ; パレット指定し始め
-    44 00000062 B81010                  	MOV AX,0x1010
-    45 00000065 BB0F00                  	MOV BX,0x000F ; 背景
-    46 00000068 B63F                    	MOV DH,0x3f ; R
-    47 0000006A B500                    	MOV CH,0x00 ; G
-    48 0000006C B100                    	MOV CL,0    ; B
-    49 0000006E CD10                    	INT	0x10		; ビデオBIOS呼び出し
-    50                                  
-    51                                  ; pixel書き込み
-    52 00000070 BE0000                  	MOV SI,0x00; 初期化
-    53 00000073 B91500                  	MOV CX,0x15;
-    54 00000076 BA1500                  	MOV DX,0x15;
-    55                                  
-    56                                  key:
-    57 00000079 B400                    	MOV AH,0x00
-    58 0000007B CD16                    	INT	0x16		; ビデオBIOS呼び出し
-    59 0000007D EB00                    	JMP pixel
-    60                                  
-    61                                  ; pixel書き込み
-    62                                  pixel:
-    63 0000007F B40C                    	MOV AH,0x0c;
-    64 00000081 B015                    	MOV AL,0x15;
-    65 00000083 83C101                  	ADD CX,1;
-    66 00000086 83C201                  	ADD DX,1;
-    67 00000089 CD10                    	INT	0x10		; ビデオBIOS呼び出し
-    68 0000008B 74EC                    	JE SHORT key ; 終了した場合のjump
-    69                                  	;こっちは、いわゆる else
-    70 0000008D EBEA                    	JMP key ; ループで元に戻す
-    71                                  
-    72                                  ;	  MOV AX,0x1010 ; パレット指定し始め
-    73                                  ;		MOV BX,0x0000 ; 背景
-    74                                  ;		MOV DH,0x3f ; R
-    75                                  ;		MOV CH,0x00 ; G
-    76                                  ;		MOV CL,0    ; B
-    77                                  ;		INT	0x10		; ビデオBIOS呼び出し
+    31                                  ; http://oswiki.osask.jp/?%28AT%29BIOS
+    32                                  
+    33                                  entry:
+    34 00000050 B80000                  	MOV	AX,0		; レジスタ初期化
+    35 00000053 8ED0                    	MOV	SS,AX
+    36 00000055 BC007C                  	MOV	SP,0x7c00
+    37 00000058 8ED8                    	MOV	DS,AX
+    38 0000005A 8EC0                    	MOV	ES,AX
+    39                                  
+    40                                  ; カラーモード VGAグラフィックス
+    41 0000005C B400                    	MOV AH,0x00
+    42 0000005E B012                    	MOV AL,0x12
+    43 00000060 CD10                    	INT	0x10		; ビデオBIOS呼び出し
+    44                                  
+    45                                  ; パレット指定し始め
+    46 00000062 B81010                  	MOV AX,0x1010
+    47 00000065 BB0F00                  	MOV BX,0x000F ; 背景
+    48 00000068 B63F                    	MOV DH,0x3f ; R
+    49 0000006A B500                    	MOV CH,0x00 ; G
+    50 0000006C B100                    	MOV CL,0    ; B
+    51 0000006E CD10                    	INT	0x10		; ビデオBIOS呼び出し
+    52                                  
+    53                                  ; pixel書き込み
+    54 00000070 BE0000                  	MOV SI,0x00; 初期化
+    55 00000073 B91500                  	MOV CX,0x15;
+    56 00000076 BA1500                  	MOV DX,0x15;
+    57                                  
+    58                                  key:
+    59 00000079 B400                    	MOV AH,0x00
+    60 0000007B CD16                    	INT	0x16		; ビデオBIOS呼び出し
+    61                                  
+    62 0000007D 80FC4D                  	CMP AH,0x4d
+    63 00000080 740F                     	JE right
+    64 00000082 80FC4B                   	CMP AH,0x4b
+    65 00000085 7414                     	JE left
+    66 00000087 80FC48                   	CMP AH,0x48
+    67 0000008A 740A                     	JE up
+    68 0000008C 80FC50                   	CMP AH,0x50
+    69 0000008F 740F                     	JE down
+    70                                  
+    71                                  right:
+    72 00000091 83C101                  ADD CX,1;
+    73 00000094 EB0F                    JMP pixel
+    74                                  
+    75                                  up:
+    76 00000096 83EA01                  SUB DX,1;
+    77 00000099 EB0A                    JMP pixel
     78                                  
-    79                                  ;	MOV	SI,msg
-    80                                  ; putloop:
-    81                                  ; 	MOV	AL,[SI]
-    82                                  ; 	ADD	SI,1		; SIに1を足す
-    83                                  ; 	CMP	AL,0
-    84                                  ; 	JE SHORT	fin
-    85                                  ; 	MOV	AH,0x0e		; 一文字表示ファンクション
-    86                                  ; 	MOV	BX,15		; カラーコード
-    87                                  ; 	INT	0x10		; ビデオBIOS呼び出し
-    88                                  ; 	JMP	putloop
-    89                                  ; fin:
-    90                                  	; HLT			; 何かあるまでCPUを停止させる
-    91                                  	; JMP SHORT	fin	; 無限ループ
-    92                                  
-    93                                  msg:
-    94 0000008F 0A0A                    	DB	0x0a, 0x0a	; 改行を2つ
-    95 00000091 68656C6C6F2C20776F-     	DB	"hello, world"
-    95 0000009A 726C64             
-    96 0000009D 0A                      	DB	0x0a		; 改行
-    97 0000009E 00                      	DB	0
-    98                                  
-    99 0000009F <res 0000015F>          	RESB	0x01fe-($-$$)	; 510バイト目までを0x00で埋める命令
-    99          ******************       warning: uninitialized space declared in .text section: zeroing
-   100                                  
-   101 000001FE 55AA                    	DB	0x55, 0xaa	; 最後にマーカーが必要
+    79                                  left:
+    80 0000009B 83E901                  SUB CX,1;
+    81 0000009E EB05                    JMP pixel
+    82                                  
+    83                                  down:
+    84 000000A0 83C201                  ADD DX,1;
+    85 000000A3 EB00                    JMP pixel
+    86                                  
+    87                                  ; pixel書き込み
+    88                                  pixel:
+    89 000000A5 B40C                    	MOV AH,0x0c;
+    90 000000A7 B015                    	MOV AL,0x15;
+    91 000000A9 CD10                    	INT	0x10		; ビデオBIOS呼び出し
+    92 000000AB 74CC                    	JE SHORT key ; 終了した場合のjump
+    93                                  	;こっちは、いわゆる else
+    94 000000AD EBCA                    	JMP key ; ループで元に戻す
+    95                                  
+    96                                  
+    97                                  ;	MOV	SI,msg
+    98                                  ; putloop:
+    99                                  ; 	MOV	AL,[SI]
+   100                                  ; 	ADD	SI,1		; SIに1を足す
+   101                                  ; 	CMP	AL,0
+   102                                  ; 	JE SHORT	fin
+   103                                  ; 	MOV	AH,0x0e		; 一文字表示ファンクション
+   104                                  ; 	MOV	BX,15		; カラーコード
+   105                                  ; 	INT	0x10		; ビデオBIOS呼び出し
+   106                                  ; 	JMP	putloop
+   107                                  ; fin:
+   108                                  	; HLT			; 何かあるまでCPUを停止させる
+   109                                  	; JMP SHORT	fin	; 無限ループ
+   110                                  
+   111                                  msg:
+   112 000000AF 0A0A                    	DB	0x0a, 0x0a	; 改行を2つ
+   113 000000B1 68656C6C6F2C20776F-     	DB	"hello, world"
+   113 000000BA 726C64             
+   114 000000BD 0A                      	DB	0x0a		; 改行
+   115 000000BE 00                      	DB	0
+   116                                  
+   117 000000BF <res 0000013F>          	RESB	0x01fe-($-$$)	; 510バイト目までを0x00で埋める命令
+   117          ******************       warning: uninitialized space declared in .text section: zeroing
+   118                                  
+   119 000001FE 55AA                    	DB	0x55, 0xaa	; 最後にマーカーが必要
