@@ -53,21 +53,21 @@ entry:
 	MOV CX,0x15;
 	MOV DX,0x15;
 
+key:
+	MOV AH,0x00
+	INT	0x16		; ビデオBIOS呼び出し
+	JMP pixel
+
 ; pixel書き込み
 pixel:
 	MOV AH,0x0c;
 	MOV AL,0x15;
-	; MOV CX,0x15;
-	; MOV DX,0x15;
 	ADD CX,1;
 	ADD DX,1;
 	INT	0x10		; ビデオBIOS呼び出し
-	ADD SI,1
-	CMP SI,100 ; 終了条件（式）
-	JE SHORT fin ; 終了した場合のjump
+	JE SHORT key ; 終了した場合のjump
 	;こっちは、いわゆる else
-	JMP pixel ; ループで元に戻す
-
+	JMP key ; ループで元に戻す
 
 ;	  MOV AX,0x1010 ; パレット指定し始め
 ;		MOV BX,0x0000 ; 背景
